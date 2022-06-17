@@ -1,17 +1,11 @@
 
 module Halftag::Badge {
-    use std::option::{Self, Option, some};
-    use std::vector::length;
-    use Std::Event;
-    use std::errors;
+    use std::option::Option;
+    use std::vector;
     use std::signer;
-    use std::GUID::GUID;
-    // use 0x1::Vector;
-    // use 0x1::Signer;
-    // use 0x1::Errors;
+    use std::GUID;
 
-    // const MAX_TEXT_LENGTH: u64 = 512;
-    // const ETextOverflow: u64 = 0;
+    const EID_EXISTS: u8 = 1;
 
     struct Badge<T: store + drop> has key, store {
         id: GUID::ID,
@@ -29,14 +23,14 @@ module Halftag::Badge {
         badge_list: vector<Badge<T>>,
     }    
 
-    // register all badge issued
-    struct BadgeIssueEvent has copy, drop, store {
-        id: GUID::ID,
-        to: address,   
-    }    
-
     struct PendingBadges<T: store + drop> has store {
         pending_list: vector<Badge<T>>,
+    }  
+
+    // register all badge issued
+    struct BadgeIssueEvent has copy, drop, store {
+        event_id: GUID::ID,
+        to: address,   
     }    
 
     public fun initialize<T: store + drop>(
@@ -44,30 +38,31 @@ module Halftag::Badge {
     ) acquires BadgeCollection, PendingBadges {
         if (!exists<BadgeCollection<T>>(Signer::address_of(account))) {
             move_to(account, BadgeCollection { badge_list: Vector::empty<Badge<T>>() });
-            move_to(account, PendingBadges { pending_list: Vector::empty<Badge<T>>() });
+            // move_to(account, PendingBadges { pending_list: Vector::empty<Badge<T>>() });
         };
     }
 
     public fun badge_issuance<T: store + drop>(
-        issuer: &signer, type: T, name: vector<u8>, meta_data: vector<u8>
+        issuer: &signer, to: address, type: T, name: vector<u8>, meta_data: vector<u8>
     ): Badge<T> acquires PendingBadges {
+        if (!exists<PendingBadges<T>>(to)) {
+            move_to(to, PendingBadges { pending_list: Vector::empty<Badge<T>>() });
+        };
         let token_id = GUID::create(issuer);
-        Badge { id: token_id, type, name, Signer::address_of(issuer), meta_data }
-        // move to acceptance account's pendingbadges collection
-        move_to(account, PendingBadges { pending_list: Vector::empty<Badge<T>>() });
-
+        let badge = Badge { id: token_id, type, name, Signer::address_of(issuer), meta_data };
+        let pending_list = &mut borrow_global_mut<PendingBadges<T>>(to).pending_list;
+        Vector::push_back(pending_list, badge);
     }
 
     public fun badge_confirm<T: store + drop>(
-        account: address, badge: Badge<T>
+        account: &signer, badge: Badge<T>
     ) acquires BadgeCollection, PendingBadges {
         // assert!(Signer::address_of(&account) == ADMIN, ENOT_ADMIN);
-
         // assert!(exists<BadgeCollection<T>>(account), Errors::not_published(ENFT_COLLECTION_NOT_PUBLISHED));
-        assert!(!has_badge<T>(account, &badge.id), Errors::not_in_pendinglist(EID_EXISTS));
+        assert!(!has_badge<T>(Signer::address_of(account), &badge.id), EID_EXISTS);
 
-        let pending_list = &mut borrow_global_mut<PendingBadges<T>>(account).pending_list;
-        let badge_collection = &mut borrow_global_mut<BadgeCollection<T>>(account).badge_list;
+        let pending_list = &mut borrow_global_mut<PendingBadges<T>>(Signer::address_of(account)).pending_list;
+        let badge_collection = &mut borrow_global_mut<BadgeCollection<T>>(Signer::address_of(account)).badge_list;
 
         Vector::pop_back(pending_list, badge);        
         Vector::push_back(badge_collection, badge);
@@ -104,13 +99,13 @@ module Halftag::Badge {
     // }  
 
     public fun get_issuer(
-        lr_account: &signer,
+        account: &signer,
     ) {
 
     }  
 
     public fun get_badge_amount(
-        lr_account: &signer,
+        account: &signer,
     ) {
 
     }  
@@ -118,8 +113,9 @@ module Halftag::Badge {
 
 
 #[test_only]
-module 0x1::NFTTests {
+module 0x1::BadgeTests {
     use Std::GUID;
     use 0x1::NFT;
     use 0x1::NFTGallery;
     use Std::Option;
+}    

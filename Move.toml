@@ -1,10 +1,9 @@
 [package]
-name = "halftag"
-version = "0.0.0"
+name = "Halftag"
+version = "0.0.1"
 
 [dependencies]
 MoveStdlib = { git = "https://github.com/move-language/move.git", subdir = "language/move-stdlib", rev = "main" }
 
 [addresses]
-Std = "0x1"
-
+Halftag = "0x1"
