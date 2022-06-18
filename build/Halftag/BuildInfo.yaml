@@ -1,0 +1,19 @@
+---
+compiled_package_info:
+  package_name: Halftag
+  address_alias_instantiation:
+    Halftag: "00000000000000000000000000000002"
+    std: "00000000000000000000000000000001"
+  source_digest: 26D926AB73756AC12677BD72AED22CFFD0F50AB044ADE7BD7586D5DA2137BE02
+  build_flags:
+    dev_mode: false
+    test_mode: false
+    generate_docs: false
+    generate_abis: false
+    install_dir: ~
+    force_recompilation: false
+    additional_named_addresses: {}
+    architecture: ~
+    only_deps: false
+dependencies:
+  - MoveStdlib

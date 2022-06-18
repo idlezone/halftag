@@ -6,4 +6,5 @@ version = "0.0.1"
 MoveStdlib = { git = "https://github.com/move-language/move.git", subdir = "language/move-stdlib", rev = "main" }
 
 [addresses]
-Halftag = "0x1"
+std = "0x1"
+Halftag = "0x2"
